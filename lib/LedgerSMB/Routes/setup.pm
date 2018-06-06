@@ -24,7 +24,8 @@ get '/' => require_login sub {
 };
 
 get '/setup/' => require_login sub {
-    # Workaround for https://github.com/PerlDancer/Dancer2-Plugin-Auth-Extensible/issues/82
+    # Workaround for
+    # https://github.com/PerlDancer/Dancer2-Plugin-Auth-Extensible/issues/82
     redirect '/';
 };
 
