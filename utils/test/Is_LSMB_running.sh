@@ -60,8 +60,8 @@ HELP() {
 	$@
 	Script Is_LSMB_running.sh
 	    Checks that Starman/Plack is running
-	    and that the static html for setup.pl hasn't changed significantly.
-	    Significant changes could indicate an error page instead of setup.pl
+	    and that the static html for setup/ hasn't changed significantly.
+	    Significant changes could indicate an error page instead of setup/
 	
 	USAGE:
 	    utils/test/Is_LSMB_running.sh [--help]
@@ -72,7 +72,7 @@ HELP() {
 	                   Used on travis to prevent the entire test run from
 	                   failing hard in the first pass for certain users
 	        --update : update the reference file 't/data/Is_LSMB_running.html'
-	         MaxDiff : Maximum number of lines the Current setup.pl
+	         MaxDiff : Maximum number of lines the current setup/
 	                     and 't/data/Is_LSMB_running.html' may differ by
 	                   Current thinking is this should always be 0
 	                   Which holds true while the list of available
@@ -100,7 +100,7 @@ if [[ $1 == '--help' ]]; then HELP $EX_OK; shift; fi
 if [[ $1 == '--update' ]]; then UPDATE=true; shift; else UPDATE=false; fi
 if [[ $1 == '--early' ]]; then EARLY=true; shift; else EARLY=false; fi
 if (( ${#@} >1 )); then shift; HELP $EX_USAGE "unknown argument $@"; fi # we should have zero or one arguments left at this point.
-MaxDiff=${1:-0};    # maximum number of added or removed lines allowed in the setup.pl static html
+MaxDiff=${1:-0};    # maximum number of added or removed lines allowed in the setup/ static html
 if [[ $MaxDiff =~ "^[0-9]+$" ]]; then HELP $EX_USAGE "Final Argument 'MaxDiff' ($MaxDiff) must be a number $MaxDiff"; fi # MaxDiff Must be an integer
 
 src='t/data/Is_LSMB_running.html'
@@ -159,7 +159,7 @@ WaitForPlackup() {
     i=0;
     while (( i++ < 100 )); do # wait up to 10 seconds for plack or starman server to respond to a curl
         pgrep -f 'plackup' >/dev/null
-        curl --max-time 60 --connect-timeout 60 --fail --silent $psgi_base_url/setup.pl 2>&1 >/dev/null && {
+        curl --max-time 60 --connect-timeout 60 --fail --silent $psgi_base_url/setup/ 2>&1 >/dev/null && {
             httpdrunning=true;
             echo "starman/plackup responded after $i * 0.1 seconds"; 
             break;
