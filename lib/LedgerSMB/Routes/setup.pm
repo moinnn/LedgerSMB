@@ -5,6 +5,13 @@ use Dancer2 appname => 'LedgerSMB/Setup';
 use Dancer2::Plugin::Auth::Extensible;
 
 
+use LedgerSMB;
+
+hook before => sub {
+    # we want separate auth cookies for setup and the main app
+    engine('session')->{cookie_name} = 'ledgersmb.setup';
+};
+
 hook before_template => sub {
     my ($tokens) = @_;
 
