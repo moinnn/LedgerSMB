@@ -7,6 +7,8 @@ use Dancer2::Plugin::Auth::Extensible;
 
 use LedgerSMB;
 
+set layout => 'setup';
+
 hook before => sub {
     # we want separate auth cookies for setup and the main app
     engine('session')->{cookie_name} = 'ledgersmb.setup';
@@ -20,7 +22,11 @@ hook before_template => sub {
 };
 
 get '/' => require_login sub {
-    'Ok.'
+    template 'setup_welcome';
+};
+
+get '/login' => sub {
+    template 'transparent_login', {}, { layout => undef };
 };
 
 get '/setup/' => require_login sub {

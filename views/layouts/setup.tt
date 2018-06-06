@@ -1,0 +1,11 @@
+<?lsmb INCLUDE "ui-header.html"
+stylesheet="ledgersmb.css"
+include_stylesheet=["setup.css"] ?>
+<?lsmb PROCESS elements.html ?>
+<body id="setup-begin-backup" class="lsmb <?lsmb settings.dojo_theme ?>">
+<div class="setupconsole">
+<h2><?lsmb text('Database Management Console') ?></h2>
+<?lsmb content ?>
+</div>
+</body>
+</html>
