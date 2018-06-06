@@ -176,7 +176,7 @@ SkipEarly
 WaitForPlackup || DIE $EX_NOHOST "ERROR: plackup or starman didn't start for some reason" "Check these logs for more info"
 
 
-if curl --max-time 60 --connect-timeout 60 --progress-bar $psgi_base_url/setup.pl 2>/tmp/Is_LSMB_running.log >/tmp/Is_LSMB_running.html ; then
+if curl --max-time 60 --connect-timeout 60 --progress-bar --location $psgi_base_url/setup/ 2>/tmp/Is_LSMB_running.log >/tmp/Is_LSMB_running.html ; then
     echo "Starman/Plack is Running";
 else    # fail early if starman is not running
     E=$?;
