@@ -9,6 +9,7 @@ hook before_template => sub {
     my ($tokens) = @_;
 
     $tokens->{text} = sub { return shift };
+    $tokens->{ledgersmb_version} = $LedgerSMB::VERSION;
 };
 
 get '/' => require_login sub {
