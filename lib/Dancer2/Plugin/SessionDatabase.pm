@@ -24,9 +24,10 @@ our $VERSION = '0.001';
 
 register database => sub {
     my $self = shift;
+    my $db = shift;
 
     my $session = $self->app->session;
-    my $dbname = $session->read('__auth_extensible_database');
+    my $dbname = $db // $session->read('__auth_extensible_database');
     my $username = $session->read('logged_in_user');
     my $password = $session->read('__auth_extensible_pass');
     my $dbh = DBI->connect('dbi:Pg:database=' . $dbname
