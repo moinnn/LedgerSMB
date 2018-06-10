@@ -5,7 +5,55 @@ include_stylesheet=["setup.css"] ?>
 <body id="setup-begin-backup" class="lsmb <?lsmb settings.dojo_theme ?>">
 <div class="setupconsole">
 <h2><?lsmb text('Database Management Console') ?></h2>
-<?lsmb content ?>
+
+<div class="listtop"><?lsmb text('Database Credentials') ?></div>
+<table class='lsmb_info' id="credentials">
+  <tbody>
+    <tr><td><?lsmb text('Username ') ?> :</td>
+      <td id="username"><?lsmb username ?></td></tr>
+    <tr><td><?lsmb text('Database ') ?> :</td>
+      <td id="databasename"><?lsmb database ?></td></tr>
+    <?lsmb IF database ?>
+    <tr>
+      <td></td>
+      <td>
+        <form method="POST" action="./upgrade" style="display:inline">
+             <button type="submit"
+                     data-dojo-type="dijit/form/Button">
+                     <?lsmb IF needs_upgrade ?>
+                     Upgrade
+                     <?lsmb ELSE ?>
+                     Repair
+                     <?lsmb END ?>
+                     </button>
+        </form>
+        <form method="POST" action="./backup" style="display:inline">
+             <button type="submit"
+                     data-dojo-type="dijit/form/Button">Backup</button>
+        </form>
+        <form method="POST" action="./copy" style="display:inline">
+             <button type="submit"
+                     data-dojo-type="dijit/form/Button">Copy To</button>
+             <input type=text data-dojo-type="dijit/form/TextBox" />
+          </form></td>
+      <?lsmb ELSE ?>
+      <td></td>
+      <?lsmb END ?>
+</tr>
+  </tbody>
+</table>
+<br>
+
+
+<div class="menu">
+
+  <hr />
+  <div class="menu-item"><a href="./logout">Log out</a></div>
+</div>
+
+<div class="content">
+  <?lsmb content ?>
+</div>
 </div>
 </body>
 </html>

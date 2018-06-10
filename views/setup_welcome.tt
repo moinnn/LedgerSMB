@@ -1,1 +1,79 @@
-Welcome!
+
+<div>
+  <div class="dashboard">dashboard</div>
+  <div class="database-list">
+    <h1>list of databases</h1>
+    <table>
+      <caption>databases</caption>
+      <tbody>
+      <tr>
+        <td><form method="POST"
+                  action="./create-company">
+              <input type=text data-dojo-type="dijit/form/TextBox" />
+              <button type="submit"
+                      data-dojo-type="dijit/form/Button">+</button></form>
+        </td>
+      </tr>
+      <?lsmb FOR db IN databases ?>
+      <tr>
+          <?lsmb IF db == database ?>
+          <td class="selected-database"><a href="?database=<?lsmb db ?>"><?lsmb db ?></a></td>
+          <?lsmb ELSE ?>
+          <td><a href="?database=<?lsmb db ?>"><?lsmb db ?></a></td>
+          <?lsmb END ?>
+      </tr>
+      <?lsmb END ?>
+      </tbody>
+    </table>
+  </div>
+  <?lsmb IF database ?>
+  <div class="user-list">
+    <h1>list of users</h1>
+    <table>
+      <caption>users</caption>
+      <tbody>
+      <tr>
+        <td><form method="POST"
+                  action="./create-user">
+              <input type="text" data-dojo-type="dijit/form/TextBox" />
+              <button type="submit"
+                      data-dojo-type="dijit/form/Button">+</button>
+            </form>
+        </td>
+      </tr>
+      <?lsmb FOR user IN users ?>
+        <tr>
+          <td>
+            <a href="./edit-user?database=<?lsmb database ?>&user=<?lsmb user.id ?>"><?lsmb user.username ?></a>
+          </td>
+        </tr>
+      <?lsmb END ?>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="user-list">
+    <h1>list of templates</h1>
+    <form method="POST" action="./load-templates">
+    <table>
+      <caption>templates</caption>
+      <tbody>
+      <?lsmb FOR template IN templates ?>
+        <tr>
+          <td>
+            <input type="radio" id="template-<?lsmb template ?>"
+                   name="template" data-dojo-type="dijit/form/RadioButton" />
+            <label for="template-<?lsmb template ?>"><?lsmb template ?></label>
+          </td>
+        </tr>
+      <?lsmb END ?>
+      </tbody>
+    </table>
+    <button type="submit" data-dojo-type="dijit/form/Button">Load</button>
+    </form>
+  </div>
+
+  <?lsmb END ?>
+
+
+</div>
