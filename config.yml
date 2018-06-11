@@ -43,6 +43,7 @@ engines:
 plugins:
   Auth::Extensible:
     login_template: transparent_login
+    login_page_handler: LedgerSMB::Routes::setup::render_login_template
     realms:
       users:
         provider: DBConnection

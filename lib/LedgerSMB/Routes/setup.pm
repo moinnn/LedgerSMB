@@ -99,9 +99,11 @@ get '/edit-user' => require_login sub {
     'Todo'
 };
 
-get '/login' => sub {
-    template 'transparent_login' => {}, { layout => '' };
-};
+sub render_login_template {
+    template 'transparent_login' => {
+        return_url => query_parameters->get('return_url')
+    }, { layout => undef };
+}
 
 post '/upgrade' => sub {
     'Todo'
