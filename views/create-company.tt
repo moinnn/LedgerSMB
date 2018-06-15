@@ -1,0 +1,278 @@
+<?lsmb PROCESS elements.html ?>
+
+<form data-dojo-type="lsmb/SimpleForm"
+      action=""
+      method="POST"
+      name="credentials">
+  <div id="sep" class="listtop">
+    Pre-defined Chart-of-Accounts selection
+  </div>
+
+  <p>
+    Please select a country from the list of countries with predefined
+    charts of accounts, or select no country to define or import accounts and
+    headings later. Please do take note that you want to load a chart
+    for evaluation purposes as many functions depend on accounts of
+    certain types being defined.
+  </p>
+<div class="inputrow">
+  <?lsmb
+    INCLUDE select element_data = {
+         options = coa_countries
+   default_blank = 1
+            name = 'coa_country'
+     default_values = [ params.coa_country ]
+       text_attr = 'name'
+      value_attr = 'code'
+           label = text('Country for CoA') #'
+    };
+    ?>
+</div>
+  <div class="inputrow">
+    <?lsmb
+       IF coa_data.${params.coa_country} ;
+       INCLUDE select element_data = {
+       options = coa_data.${params.coa_country}.chart
+       default_values = [ params.chart ]
+       default_blank = 1
+            name = 'chart'
+       text_attr = 'code'
+      value_attr = 'code'
+           label = text('Chart of accounts')
+       };
+       END;
+-?>
+</div>
+<div class="inputrow">
+<?lsmb
+   IF coa_data.${params.coa_country}
+      && coa_data.${params.coa_country}.gifi.size > 0;
+       INCLUDE select element_data = {
+   options = coa_data.${params.coa_country}.gifi
+   default_blank = 1
+   default_values = [ params.gifi ]
+            name = 'gifi'
+       text_attr = 'code'
+      value_attr = 'code'
+           label = text('GIFI')
+   };
+   END;
+-?>
+</div>
+<div class="inputrow">
+<?lsmb
+   IF coa_data.${params.coa_country}
+      && coa_data.${params.coa_country}.sic.size > 0 ;
+       INCLUDE select element_data = {
+   options = coa_data.${params.coa_country}.sic
+   default_blank = 1
+   default_values = [ params.sic ]
+            name = 'sic'
+       text_attr = 'code'
+      value_attr = 'code'
+           label = text('SIC')
+   };
+   END;
+   ?>
+</div>
+
+<?lsmb IF params.chart ; ?>
+<div class="listtop"><?lsmb text('Select Templates to Load') ?></div>
+<div class="inputrow">
+<?lsmb
+   PROCESS select element_data = {
+       name = "template_dir"
+   options = templates
+   default_values = [ params.template_dir ]
+   text_attr = 'code'
+   value_attr = 'code'
+   default_blank = 1
+      label = text('Templates')
+} ?>
+</div>
+
+<div class="listtop"><?lsmb text('Create initial user') ?></div>
+<div class="inputrow">
+<?lsmb INCLUDE input element_data = {
+                            name  = 'username'
+                            type  = 'text'
+                           label  = text('Username')
+                            class = 'username'
+                            value = params.username
+                         required = 'required'
+} ?>
+</div>
+<div class="inputrow">
+<label id="password-label" for="password" class="password"><?lsmb
+text('Password') ?></label>
+<?lsmb PROCESS input element_data = {
+                 name='password'
+                 type='password'
+                 class = 'password'
+                 size='60' } ?>
+</div>
+<div class="inputrow">
+  <label><?lsmb text('User creation') ?></label>
+  <div class="input_group">
+    <div>
+      <?lsmb
+         PROCESS input element_data = {
+         label   = text("Create new user")
+         value   = '0'
+         checked = 'CHECKED'
+         name    = 'pls_import'
+         type    = 'radio'
+         }
+         label_pos = 1 ;
+         ?>
+    </div>
+    <div style="float:left">
+      <?lsmb
+         PROCESS input element_data = {
+         label   = text("Import existing user")
+         value   = '1'
+         checked = ''
+         name    = 'pls_import'
+         type    = 'radio'
+         }
+         label_pos = 1 ; ?>
+    </div>
+    <?lsmb- IF notice -?>
+    <div class="notice" style="float:left"><?lsmb notice ?></div>
+    <?lsmb- END # IF notice -?>
+  </div>
+  <div data-dojo-type="dijit/Tooltip"
+       data-dojo-props="connectId:'pls-import-1',position:['below']">
+    <div style="width:30em">
+      <b>Import an existing user (from another database)</b><br /><br />
+      This username exists because it is being used with another database;
+      using it with the current database requires it to be <em>imported</em>.
+      <br /><br />
+      Note that technically any existing PostgreSQL &quot;role&quot; that is to
+      be used as a username needs to be imported this way, regardless of whether
+      it is a username in a different database.
+    </div>
+  </div>
+  <div data-dojo-type="dijit/Tooltip"
+       data-dojo-props="connectId:'pls-import-0'">
+    <div style="width:30em">
+      <b>Creates a new user</b><br />
+      This username <em>must not</em> be used by any of the other databases. If
+      you want to use a username that is already used with another database,
+      you can do so by selecting the <b>Import</b> option.
+    </div>
+  </div>
+</div>
+<div class="inputrow">
+<?lsmb INCLUDE select element_data = {
+          options = salutations
+        text_attr = 'salutation'
+       value_attr = 'id'
+    default_blank = 1
+   default_values = [ params.salutation_id ]
+             name = 'salutation_id'
+            label = 'Salutation'
+} ?>
+</div>
+<div class="inputrow">
+<?lsmb INCLUDE input element_data = {
+    name = 'first_name'
+   class = 'name'
+    type = 'text'
+    size = '15'
+   value = params.first_name
+   label = text('First Name') #'
+required = 'required'
+} ?>
+</div>
+<div class="inputrow">
+<?lsmb INCLUDE input element_data = {
+    name = 'last_name'
+   class = 'name'
+    type = 'text'
+    size = '15'
+   value = params.last_name
+   label = text('Last name') #'
+required = 'required'
+} ?>
+</div>
+<div class="inputrow">
+<?lsmb INCLUDE input element_data = {
+    name = 'employeenumber'
+   class = 'control_code'
+    type = 'text'
+    size = '15'
+   label = text('Employee Number') #'
+   value = params.employeenumber
+} ?>
+</div>
+<div class="inputrow">
+<?lsmb INCLUDE input element_data = {
+    name = 'dob'
+   class = 'date'
+    type = 'text'
+    size = '10'
+   label = text('Date of Birth') #'
+   value = params.dob
+} ?>
+</div>
+<div class="inputrow">
+<?lsmb INCLUDE input element_data = {
+    name = 'ssn'
+   class = 'tax_id'
+    type = 'text'
+    size = '15'
+   label = text('Tax ID/SSN') #'
+   value = params.ssn
+} ?>
+</div>
+<div class="inputrow">
+<?lsmb
+INCLUDE select element_data = {
+          options = countries
+    default_blank = 1
+        text_attr = 'name'
+       value_attr = 'code'
+    default_blank = 1
+   default_values = [ params.country_id ]
+             name = 'country_id'
+            label = 'Country'
+         required = 'required'
+} ?>
+</div>
+<div class="inputrow">
+<?lsmb INCLUDE select element_data = {
+          options = perm_sets
+        text_attr = 'label'
+       value_attr = 'id'
+             name = 'perms'
+    default_blank = 1
+   default_values = [ params.perms ]
+            label = 'Assign Permissions'
+} ?>
+</div>
+<?lsmb END ?>
+
+<div class="inputrow">
+<?lsmb INCLUDE button element_data = {
+    text = text('Next') #';
+    name = 'action'
+   value = 'update'
+    type = 'submit'
+   class = 'submit'
+} ?>
+
+<?lsmb IF params.chart ;
+       INCLUDE button element_data = {
+       text = text('Create')
+       name = 'action'
+       value = 'create'
+       type = 'submit'
+       class = 'submit'
+       } ;
+ END ?>
+
+</div>
+
+
+</form>
