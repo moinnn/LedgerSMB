@@ -9,7 +9,7 @@
       <tr>
         <td><form method="POST"
                   action="./create-company">
-              <input type=text data-dojo-type="dijit/form/TextBox" />
+              <input name="database" type="text" data-dojo-type="dijit/form/TextBox" />
               <button type="submit"
                       data-dojo-type="dijit/form/Button">+</button></form>
         </td>

@@ -5,10 +5,13 @@ use Dancer2 appname => 'LedgerSMB/Setup';
 use Dancer2::Plugin::Auth::Extensible;
 use Dancer2::Plugin::SessionDatabase;
 
+use File::Find::Rule;
+use File::Spec;
 use Locale::Country;
 use Try::Tiny;
 
 use LedgerSMB;
+use LedgerSMB::ApplicationConnection;
 use LedgerSMB::Database;
 use LedgerSMB::Entity::Person::Employee;
 use LedgerSMB::Entity::User;
@@ -30,6 +33,21 @@ hook before_template_render => sub {
     $tokens->{username} = logged_in_user ? logged_in_user->{username} : '';
 };
 
+
+sub _lookup_country_id {
+    my ($app, $short_country_code) = @_;
+    my $dbh = $app->dbh;
+
+    my $sth = $dbh->prepare(q{SELECT id FROM country
+                               WHERE LOWER(short_name) = ?})
+        or die 'Failed to prepare country lookup query: ' . $dbh->errstr;
+    $sth->execute(lc($short_country_code))
+        or die 'Failed to execute country lookup query: ' . $sth->errstr;
+    my $res = $sth->fetchrow_hashref('NAME_lc')
+        or die "Failed to find country information for $short_country_code";
+
+    return $res->{id};
+}
 
 sub _list_countries {
     return [
@@ -130,32 +148,65 @@ sub _template_sets {
 }
 
 sub _load_templates {
+    my $app = shift;
     my $template_dir = shift;
     my $basedir = LedgerSMB::Sysconfig::templates();
 
-    for my $filename (
+    for my $pathname (
         grep { $_ =~ m|^\Q$basedir/$template_dir/\E| }
         File::Find::Rule->new->in($basedir)) {
 
-        my $dbtemp = LedgerSMB::Template::DB->get_from_file($filename);
+        open my $fh, '<', $pathname
+            or die "Failed to open tepmlate file $pathname : $!";
+        my $content;
+        {
+            local $/ = undef;
+            $content = <$fh>;
+        }
+        close $fh
+            or warn "Can't close file $pathname";
+
+        my $relfile = File::Spec->abs2rel($pathname, $basedir);
+        my ($unused1, $directories, $filename) =
+            File::Spec->splitpath($relfile);
+        my @directories = File::Spec->splitdir($directories);
+        # $dirs[0] == $template_dir
+        # $dirs[1] == language_code (if applicable)
+        $filename =~ m/\.([^.]+)$/;
+        my $format = $1;
+        my %args = (
+            template_name => $filename,
+            template => $content,
+            format => $format,
+        );
+
+        $args{language_code} = $directories[1]
+           if (scalar @directories) > 1 && $directories[1];
+        my $dbtemp = $app->new_assoc('LedgerSMB::Template::DB', %args);
         $dbtemp->save; ###TODO: Check return value!
     }
 }
 
 sub _create_user {
-    my ($database, $employeenumber, $dob, $ssn, $username,
-        $pls_import, $password) = @_;
-    my $employee = LedgerSMB::Entity::Person::Employee->new(
-        dbh => $database->dbh,
+    my ($app, $country, $employeenumber, $first_name, $last_name,
+        $dob, $ssn, $username, $pls_import, $password) = @_;
+    my $employee = $app->new_assoc(
+        'LedgerSMB::Entity::Person::Employee',
+        dbh => $app->dbh,
         control_code => $employeenumber,
+        employeenumber => $employeenumber,
+        first_name => $first_name,
+        last_name => $last_name,
         dob => LedgerSMB::PGDate->from_input($dob),
         ssn => $ssn,
+        country_id => _lookup_country_id($app, $country),
         );
     $employee->save;
 
-    my $user = LedgerSMB::Entity::User->new(
-        dbh => $database->dbh,
-        entity_id => $employee->id,
+    my $user = $app->new_assoc(
+        'LedgerSMB::Entity::User',
+        dbh => $app->dbh,
+        entity_id => $employee->entity_id,
         username => $username,
         pls_import => ($pls_import eq '1'),
         );
@@ -176,21 +227,22 @@ sub _create_user {
 }
 
 sub _assign_user_roles {
-    my ($database, $username, $roles) = @_;
+    my ($app, $username, $roles) = @_;
 
     for my $role (@$roles) {
         PGObject->call_procedure(
-            dbh => $database->dbh,
-            funcname => 'admin__add_user_to_role'
+            dbh => $app->dbh,
+            funcname => 'admin__add_user_to_role',
             args => [ $username, $role ]);
     }
 }
 
 sub _get_admin_roles {
+    my $app = shift;
     return [
         map { $_->{rolname} }
         PGObject->call_procedure(
-                 dbh => $database->dbh,
+                 dbh => $app->dbh,
                  funcname => 'admin__get_roles',
                  args => [])
         ];
@@ -210,11 +262,14 @@ get '/' => require_login sub {
 };
 
 sub _template_create_company {
+    my $errormessage = shift;
+
     template 'create-company', {
         'coa_countries' => _coa_countries(),
         'coa_data' => _coa_data(),
         'templates' => , _template_sets(),
         'username' => '',
+        'errormessage' => $errormessage,
         'salutations' => [
             { id => 1, salutation => 'Dr.' },
             { id => 2, salutation => 'Miss.' },
@@ -242,14 +297,14 @@ post '/create-company' => require_login sub {
 
     my @missing_params;
     for my $param (qw(username first_name last_name country_id perms)) {
-        if (undefined param($param)) {
+        if (! defined param($param)) {
             push @missing_params, $param;
         }
     }
     die "Missing required values: " . join(', ', @missing_params)
         if @missing_params;
 
-    my $dbname = session->read('__auth_extensible_database');
+    my $dbname = param('database');
     my $database = LedgerSMB::Database->new(
         username => session->read('logged_in_user'),
         password => session->read('__auth_extensible_pass'),
@@ -259,8 +314,8 @@ post '/create-company' => require_login sub {
     if ($info->{status} ne 'does not exist') {
         return _template_create_company("Database '$dbname' already exists");
     }
-    my $rc = $database->create_and_load;
-    if ($rc != 0) {
+    my $rc = eval { $database->create_and_load; };
+    if (! $rc) {
         ###TODO: include the failure logs in the result page!
         return _template_create_company(
             'Database creation & initialisation failed');
@@ -282,17 +337,24 @@ post '/create-company' => require_login sub {
             q{Initial COA load failed -- Database creation aborted});
     }
 
-    _load_templates(param('template_dir'));
-    _create_user($database, param('employeenumber'), param('dob'), param('ssn'),
+    my $app = LedgerSMB::ApplicationConnection->new(
+        database => $database);
+    _load_templates($app, param('template_dir'));
+    _create_user($app, param('country_id'), param('employeenumber'),
+                 param('first_name'), param('last_name'), param('dob'),
+                 param('ssn'),
                  param('username'), param('pls_import'), param('password'));
 
     if (param('perms') != -1) {
-        _assign_user_roles( param('username'),
+        _assign_user_roles( $app, param('username'),
                             (param('perms') == 0)
-                            ? [ 'users_manage' ] : _get_admin_roles );
+                            ? [ 'users_manage' ] : _get_admin_roles($app));
     }
-    $database->dbh->commit;
+    $app->dbh->commit;
     ###TODO: rebuild_modules
+
+    ###TODO: Return to the main screen, logged in on the new database
+    'Created successfully.'
 };
 
 post '/create-user' => require_login sub {

@@ -4,6 +4,15 @@
       action=""
       method="POST"
       name="credentials">
+  <input type="hidden" name="database" value="<?lsmb params.database ?>" >
+  <div id="sep" class="listtop">
+    Creation of company: <?lsmb params.database ?>
+  </div>
+  <?lsmb IF errormessage ?>
+  <div class="error">
+    <?lsmb errormessage ?>
+  </div>
+  <?lsmb END ?>
   <div id="sep" class="listtop">
     Pre-defined Chart-of-Accounts selection
   </div>
