@@ -1,0 +1,50 @@
+# This is the main configuration file of your Dancer2 app
+# env-related settings should go to environments/$env.yml
+# all the settings in this file will be loaded at Dancer's startup.
+
+# Your application's name
+appname: "LedgerSMB/Setup"
+
+# The default layout to use for your application (located in
+# views/layouts/main.tt)
+layout: "main"
+
+# when the charset is set to UTF-8 Dancer2 will handle for you
+# all the magic of encoding and decoding. You should not care
+# about unicode within your app when this setting is set (recommended).
+charset: "UTF-8"
+
+stylesheet: "ledgersmb.css"
+dojo_theme: "claro"
+
+template: "template_toolkit"
+session: Cookie
+engines:
+  template:
+    template_toolkit:
+      start_tag: '\<\?lsmb'
+      end_tag: '\?\>'
+      include_path: UI/lib/
+  session:
+    Cookie:
+      secret_key: V9slW49T0WzHndRaLc56UeV6K87qRp1m
+      default_duration: 604800
+      with_request_address: 0
+      cookie_name: testapp.session
+#
+#engines:
+#  session:
+#    YAML:
+#      cookie_name: eshop.session
+#      is_secure: 1
+#      is_http_only: 1
+
+plugins:
+  Auth::Extensible:
+    login_template: transparent_login
+    realms:
+      users:
+        provider: DBConnection
+        auth_database: postgres
+  SessionDatabase:
+    host: postgres

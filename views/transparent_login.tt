@@ -1,12 +1,12 @@
 <?lsmb INCLUDE "ui-header.html"
        stylesheet="ledgersmb.css"
-       include_stylesheet=["setup.css"];
-       PROCESS elements.html -?>
-<body id="setup-login" class="lsmb <?lsmb settings.dojo_theme?>">
+       include_stylesheet=[ "/setup.css"];
+       PROCESS "elements.html"  ?>
+<body id="setup-login" class="lsmb <?lsmb settings.dojo_theme ?>">
     <div class="setupconsole" style="position:relative;height:100%">
         <div id="loading">
             <img style="display: block; margin: auto auto;"
-                 src="js/dijit/icons/images/loadingAnimation.gif"
+                 src="<?lsmb settings.app_root ?>/js/dijit/icons/images/loadingAnimation.gif"
                  alt="If this text is showing, there's most likely a problem with the Dojo setup"
                  title="Loading ..."
                  width="20" height="20" />
@@ -19,7 +19,7 @@
                 </h1>
                 <a href="http://www.ledgersmb.org/"
                    target="_top">
-                   <img src="images/ledgersmb.png"
+                   <img src="<?lsmb settings.app_root ?>/images/ledgersmb.png"
                         class="logo"
                         alt="LedgerSMB Logo" />
                 </a>
@@ -32,15 +32,16 @@
             </div>
             <form id="loginform"
                   name="credentials"
-                  style="margin-top:1em">
+                  style="margin-top:1em"
+                  method="POST">
                 <div class="login_form">
                     <div class="tabular col-1">
                         <div id="userpass">
                             <div class="inputrow">
                                 <?lsmb select_hint = text('Select or Enter User');
                                     INCLUDE select element_data = {
-                                       name = 's_user'
-                                         id = 's-user'
+                                       name = 'username'
+                                         id = 'username'
                                     options =  [ { value = 'lsmb_dbadmin',
                                                     text = 'lsmb_dbadmin'},
                                                  { value = 'postgres',
@@ -50,14 +51,14 @@
                                       class = 'username'
                                       label = text('DB admin login') #'
                                         "data-dojo-type" = "dijit/form/ComboBox"
-                                        "data-dojo-props" = "value:'$s_user', placeHolder:'$select_hint'"
+                                        "data-dojo-props" = "value:'$username', placeHolder:'$select_hint'"
                                 } ?>
                             </div>
                             <div class="inputrow">
                                 <?lsmb INCLUDE input element_data = {
-                                          name = 's_password'
-                                            id = 's-password'
-                                         value = s_password
+                                          name = 'password'
+                                            id = 'password'
+                                         value = password
                                           type = 'password'
                                           size = '15'
                                          class = 'password'
@@ -67,7 +68,7 @@
                         </div>
                         <div class="inputrow">
                             <?lsmb INCLUDE input element_data = {
-                                      name = 'database'
+                                      name = '__auth_extensible_database'
                                      value = database
                                       type = 'text'
                                       size = '15'
@@ -78,14 +79,11 @@
                     </div>
                     <div class="inputrow"
                          style="text-align:right; padding-right: 4ex; margin-top: 1ex">
-                        <button data-dojo-type="lsmb/SetupLoginButton"
+                        <button data-dojo-type="dijit/form/Button"
                                 class="submit"
-                                data-dojo-props="action:'login'"
+                                type="submit"
+                                value="Login"
                             ><?lsmb text('Login') ?></button>
-                        <button data-dojo-type="lsmb/SetupLoginButton"
-                                class="submit"
-                                data-dojo-props="action:'create_db'"
-                            ><?lsmb text('Create') ?></button>
                     </div>
                 </div>
             </form>

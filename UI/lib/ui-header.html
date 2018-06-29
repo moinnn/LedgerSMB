@@ -19,16 +19,18 @@
             # *persistent*
             # http://www.w3.org/TR/html401/present/styles.html#h-14.3.1
         ?>
-        <link rel="stylesheet" href="js/dojo/resources/dojo.css" type="text/css" />
-        <link rel="stylesheet" href="js/dijit/themes/<?lsmb dojo_theme ?>/<?lsmb dojo_theme ?>.css" type="text/css" />
+        <link rel="stylesheet" href="<?lsmb settings.app_root ?>/js/dojo/resources/dojo.css" type="text/css" />
+        <link rel="stylesheet" href="<?lsmb settings.app_root ?>/js/dijit/themes/<?lsmb settings.dojo_theme ?>/<?lsmb settings.dojo_theme ?>.css" type="text/css" />
 
         <?lsmb IF form.stylesheet ?>
-            <link rel="stylesheet" href="css/<?lsmb form.stylesheet ?>" type="text/css" />
+            <link rel="stylesheet" href="<?lsmb settings.app_root ?>/css/<?lsmb form.stylesheet ?>" type="text/css" />
         <?lsmb ELSIF stylesheet ?>
-            <link rel="stylesheet" href="css/<?lsmb stylesheet ?>" type="text/css" />
+            <link rel="stylesheet" href="<?lsmb settings.app_root ?>/css/<?lsmb stylesheet ?>" type="text/css" />
+        <?lsmb ELSIF settings.stylesheet ?>
+            <link rel="stylesheet" href="<?lsmb settings.app_root ?>/css/<?lsmb settings.stylesheet ?>" type="text/css" />
         <?lsmb END ?>
         <?lsmb FOREACH s = include_stylesheet ?>
-            <link rel="stylesheet" href="css/<?lsmb s ?>" type="text/css" />
+            <link rel="stylesheet" href="<?lsmb settings.app_root ?>/css/<?lsmb s ?>" type="text/css" />
         <?lsmb END ?>
         <?lsmb IF warn_expire ?>
         <script type="text/javascript">
@@ -47,10 +49,10 @@
                  <?lsmb END ?>
             };
        </script>
-        <script type="text/javascript" src="js/dojo/dojo.js"></script>
-        <script type="text/javascript" src="js/lsmb/main.js"></script>
+        <script type="text/javascript" src="<?lsmb settings.app_root ?>/js/dojo/dojo.js"></script>
+        <script type="text/javascript" src="<?lsmb settings.app_root ?>/js/lsmb/main.js"></script>
         <?lsmb FOREACH s = include_script ?>
-            <script type="text/javascript" src="<?lsmb s ?>" ></script>
+            <script type="text/javascript" src="<?lsmb settings.app_root ?>/<?lsmb s ?>" ></script>
         <?lsmb END ?>
         <meta name="robots" content="noindex,nofollow" />
 </head>

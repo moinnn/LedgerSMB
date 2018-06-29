@@ -420,20 +420,22 @@ sub new_UI {
         user => $request->{_user},
         locale => $request->{_locale},
         additional_vars => {
-            dojo_theme =>
-                ($LedgerSMB::App_State::Company_Config->{dojo_theme}
-                 || LedgerSMB::Sysconfig::dojo_theme()),
-            PRINTERS => [
-               ( map { { text => $_, value => $_ } }
-                 keys %LedgerSMB::Sysconfig::printers,
-                 {
-                    text => ($LedgerSMB::App_State::Locale ?
+            settings => {
+               dojo_theme =>
+                  ($LedgerSMB::App_State::Company_Config->{dojo_theme}
+                   // LedgerSMB::Sysconfig::dojo_theme()),
+               PRINTERS => [
+                  ( map { { text => $_, value => $_ } }
+                    keys %LedgerSMB::Sysconfig::printers,
+                    {
+                       text => ($LedgerSMB::App_State::Locale ?
                                 $LedgerSMB::App_State::Locale->text('Screen')
-                                : 'Screen' ),
-                    value => 'screen'
-                 } )
-            ],
-            LIST_FORMATS => sub { return available_formats(); },
+                                 : 'Screen' ),
+                       value => 'screen'
+                    } )
+               ],
+               LIST_FORMATS => sub { return available_formats(); },
+            },
         },
     );
 }
