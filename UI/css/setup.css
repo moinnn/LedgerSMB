@@ -2,6 +2,43 @@ body {
     overflow-y: auto;
 }
 
+.status.success {
+    background: #00bb00;
+    padding: 1em;
+    width: 30%;
+    position: absolute;
+    right: 40px;
+    border-radius: 6px;
+    font-weight: bold;
+    text-align: center;
+    top: 10%;
+}
+
+.status.warning {
+    background: gold;
+    padding: 1em;
+    width: 30%;
+    position: absolute;
+    right: 40px;
+    border-radius: 6px;
+    font-weight: bold;
+    text-align: center;
+    top: 10%;
+}
+
+.status.failure {
+    background: #f00;
+    color: white;
+    padding: 1em;
+    width: 30%;
+    position: absolute;
+    right: 40px;
+    border-radius: 6px;
+    font-weight: bold;
+    text-align: center;
+    top: 10%;
+}
+
 div#loading {
     z-index: 100;
     position: absolute;

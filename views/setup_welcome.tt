@@ -1,5 +1,12 @@
 
 <div>
+  <?lsmb IF completed ?>
+  <div class="status <?lsmb params.status ?>">
+    <?lsmb IF params.completed == 'create-company' && params.status == 'success' ?>
+      Successfully created <?lsmb database ?>
+    <?lsmb END ?>
+  </div>
+  <?lsmb END ?>
   <div class="dashboard">dashboard</div>
   <div class="database-list">
     <h1>list of databases</h1>

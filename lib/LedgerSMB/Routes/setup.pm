@@ -9,6 +9,7 @@ use File::Find::Rule;
 use File::Spec;
 use Locale::Country;
 use Try::Tiny;
+use URL::Encode qw(url_encode_utf8);
 
 use LedgerSMB;
 use LedgerSMB::ApplicationConnection;
@@ -210,6 +211,11 @@ sub _create_user {
         username => $username,
         pls_import => ($pls_import eq '1'),
         );
+
+    if (! $password) {
+        # unset password if it's "false" (an empty string?)
+        $password = undef;
+    }
     try {
         $user->create($password);
     }
@@ -258,6 +264,8 @@ get '/' => require_login sub {
         databases => $databases,
         users => $users,
         templates => $templates,
+        completed => param('completed'),
+        status => param('status'),
     };
 };
 
@@ -353,8 +361,8 @@ post '/create-company' => require_login sub {
     $app->dbh->commit;
     ###TODO: rebuild_modules
 
-    ###TODO: Return to the main screen, logged in on the new database
-    'Created successfully.'
+    redirect './?completed=create-company&status=success&database='
+        . url_encode_utf8(param('database'));
 };
 
 post '/create-user' => require_login sub {
@@ -379,7 +387,7 @@ post '/load-templates' => sub {
     'Todo'
 };
 
-get '/setup/' => require_login sub {
+get '/setup/?' => require_login sub {
     # Workaround for
     # https://github.com/PerlDancer/Dancer2-Plugin-Auth-Extensible/issues/82
     redirect '/';

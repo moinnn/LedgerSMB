@@ -59,11 +59,13 @@ requires 'Template::Provider';
 requires 'Try::Tiny';
 requires 'Text::CSV';
 requires 'Text::Markdown';
+requires 'URL::Encode';
 requires 'Version::Compare';
 requires 'XML::Simple';
 requires 'namespace::autoclean';
 
 recommends 'Math::BigInt::GMP';
+recommends 'URL::Encode::XS';
 
 feature 'starman', "Standalone Server w/Starman" =>
     sub {
