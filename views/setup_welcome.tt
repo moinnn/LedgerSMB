@@ -24,9 +24,9 @@
       <?lsmb FOR db IN databases ?>
       <tr>
           <?lsmb IF db == database ?>
-          <td class="selected-database"><a href="?database=<?lsmb db ?>"><?lsmb db ?></a></td>
+          <td class="selected-database"><a href="?database=<?lsmb db | url ?>"><?lsmb db | html ?></a></td>
           <?lsmb ELSE ?>
-          <td><a href="?database=<?lsmb db ?>"><?lsmb db ?></a></td>
+          <td><a href="?database=<?lsmb db | uri ?>"><?lsmb db | html ?></a></td>
           <?lsmb END ?>
       </tr>
       <?lsmb END ?>
@@ -51,7 +51,7 @@
       <?lsmb FOR user IN users ?>
         <tr>
           <td>
-            <a href="./edit-user?database=<?lsmb database ?>&user=<?lsmb user.id ?>"><?lsmb user.username ?></a>
+            <a href="./edit-user?database=<?lsmb database | uri ?>&user=<?lsmb user.id | uri ?>"><?lsmb user.username | html ?></a>
           </td>
         </tr>
       <?lsmb END ?>
@@ -68,9 +68,9 @@
       <?lsmb FOR template IN templates ?>
         <tr>
           <td>
-            <input type="radio" id="template-<?lsmb template ?>"
+            <input type="radio" id="template-<?lsmb template | html ?>"
                    name="template" data-dojo-type="dijit/form/RadioButton" />
-            <label for="template-<?lsmb template ?>"><?lsmb template ?></label>
+            <label for="template-<?lsmb template | html ?>"><?lsmb template |html ?></label>
           </td>
         </tr>
       <?lsmb END ?>

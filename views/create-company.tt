@@ -1,16 +1,16 @@
-<?lsmb PROCESS elements.html ?>
+<?lsmb PROCESS encoding_elements.html ?>
 
 <form data-dojo-type="lsmb/SimpleForm"
       action=""
       method="POST"
       name="credentials">
-  <input type="hidden" name="database" value="<?lsmb params.database ?>" >
+  <input type="hidden" name="database" value="<?lsmb params.database | html ?>" >
   <div id="sep" class="listtop">
-    Creation of company: <?lsmb params.database ?>
+    Creation of company: <?lsmb params.database | html ?>
   </div>
   <?lsmb IF errormessage ?>
   <div class="error">
-    <?lsmb errormessage ?>
+    <?lsmb errormessage | html ?>
   </div>
   <?lsmb END ?>
   <div id="sep" class="listtop">
@@ -147,7 +147,7 @@ text('Password') ?></label>
          label_pos = 1 ; ?>
     </div>
     <?lsmb- IF notice -?>
-    <div class="notice" style="float:left"><?lsmb notice ?></div>
+    <div class="notice" style="float:left"><?lsmb notice | html ?></div>
     <?lsmb- END # IF notice -?>
   </div>
   <div data-dojo-type="dijit/Tooltip"
