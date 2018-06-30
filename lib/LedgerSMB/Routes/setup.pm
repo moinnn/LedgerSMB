@@ -9,7 +9,7 @@ use File::Find::Rule;
 use File::Spec;
 use Locale::Country;
 use Try::Tiny;
-use URL::Encode qw(url_encode_utf8);
+use URI::Escape qw(uri_escape_utf8);
 
 use LedgerSMB;
 use LedgerSMB::ApplicationConnection;
@@ -361,8 +361,8 @@ post '/create-company' => require_login sub {
     $app->dbh->commit;
     ###TODO: rebuild_modules
 
-    redirect './?completed=create-company&status=success&database='
-        . url_encode_utf8(param('database'));
+    redirect uri_for('./') . '?completed=create-company&status=success&database='
+        . uri_escape_utf8(param('database'));
 };
 
 post '/create-user' => require_login sub {
