@@ -25,8 +25,16 @@ database connection.
 
 =cut
 
-use Moose;
+use strict;
+use warnings;
 
+use Moose;
+use namespace::autoclean;
+
+use File::Spec;
+
+use LedgerSMB::Database::Config;
+use LedgerSMB::Sysconfig;
 
 =head1 ATTRIBUTES
 
@@ -82,7 +90,7 @@ sub dbh {
 }
 
 
-=head2 $self->new_assoc($classname, arg1, ...)
+=head2 new_assoc($classname, arg1, ...)
 
 Creates an instance of C<$classname> passing the arguments provided
 to the class's C<new> constructor method.
@@ -100,7 +108,7 @@ sub new_assoc {
 }
 
 
-=head2 $self->associate($instance)
+=head2 associate($instance)
 
 Associates a C<PGObject::Simple> or C<PGObject::Simple::Role> derived
 object with the application connection (using the cached database handle).
@@ -119,6 +127,65 @@ sub associate {
     return $instance;
 }
 
+=head2 load_templateset($set_name)
+
+Loads the set of templates indicated by C<$set_name> from the
+template directory configured in C<ledgersmb.conf>.
+
+Dies when the given set name can't be found in the configured
+directory.
+
+=cut
+
+sub _extract_name_and_params {
+    my ($pathname, $basedir) = @_;
+
+    my $relfile = File::Spec->abs2rel($pathname, $basedir);
+    my ($unused1, $directories, $filename) =
+        File::Spec->splitpath($relfile);
+    my @directories = File::Spec->splitdir($directories);
+    # $dirs[0] == $template_dir
+    # $dirs[1] == language_code (if applicable)
+    $filename =~ m/\.([^.]+)$/;
+    my $format = $1;
+    my %args = (
+        template_name => $filename,
+        format => $format
+    );
+    $args{language_code} = $directories[1]
+        if (scalar @directories) > 1 && $directories[1];
+
+    return %args;
+}
+
+sub load_templateset {
+    my $self = shift;
+    my $set_name = shift;
+    my $templates = LedgerSMB::Database::Config->new->templates;
+    my $basedir = LedgerSMB::Sysconfig::templates();
+
+    die "Invalid template set ($set_name) specified"
+        if not exists $templates->{$set_name};
+
+    for my $pathname (@{$templates->{$set_name}}) {
+
+        open my $fh, '<', $pathname
+            or die "Failed to open tepmlate file $pathname : $!";
+        my $content;
+        {
+            local $/ = undef;
+            $content = <$fh>;
+        }
+        close $fh
+            or warn "Can't close file $pathname";
+
+        my $dbtemp = $self->new_assoc('LedgerSMB::Template::DB',
+            _extract_name_and_args($pathname, $basedir));
+        $dbtemp->save; ###TODO: Check return value!
+    }
+    return;
+}
+
 =head1 COPYRIGHT
 
 Copyright (C) 2018 The LedgerSMB Core Team
@@ -128,5 +195,7 @@ option any later version.  A copy of the license should have been included with
 your software.
 
 =cut
+
+__PACKAGE__->meta->make_immutable;
 
 1;

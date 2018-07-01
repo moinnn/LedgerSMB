@@ -97,47 +97,6 @@ sub _list_users {
     return $users;
 }
 
-sub _load_templates {
-    my $app = shift;
-    my $template_dir = shift;
-    my $templates = LedgerSMB::Database::Config->new->templates;
-    my $basedir = LedgerSMB::Sysconfig::templates();
-
-    die "Invalid template set ($template_dir) specified"
-        if not exists $templates->{$template_dir};
-    for my $pathname (@{$templates->{$template_dir}}) {
-
-        open my $fh, '<', $pathname
-            or die "Failed to open tepmlate file $pathname : $!";
-        my $content;
-        {
-            local $/ = undef;
-            $content = <$fh>;
-        }
-        close $fh
-            or warn "Can't close file $pathname";
-
-        my $relfile = File::Spec->abs2rel($pathname, $basedir);
-        my ($unused1, $directories, $filename) =
-            File::Spec->splitpath($relfile);
-        my @directories = File::Spec->splitdir($directories);
-        # $dirs[0] == $template_dir
-        # $dirs[1] == language_code (if applicable)
-        $filename =~ m/\.([^.]+)$/;
-        my $format = $1;
-        my %args = (
-            template_name => $filename,
-            template => $content,
-            format => $format,
-        );
-
-        $args{language_code} = $directories[1]
-           if (scalar @directories) > 1 && $directories[1];
-        my $dbtemp = $app->new_assoc('LedgerSMB::Template::DB', %args);
-        $dbtemp->save; ###TODO: Check return value!
-    }
-}
-
 sub _create_user {
     my ($app, $country, $employeenumber, $first_name, $last_name,
         $dob, $ssn, $username, $pls_import, $password) = @_;
@@ -223,11 +182,18 @@ get '/' => require_login sub {
 sub _template_create_company {
     my $errormessage = shift;
     my $dbconfig = LedgerSMB::Database::Config->new;
+    my $charts = $dbconfig->charts_of_accounts;
 
+    for my $type (qw( chart gifi sic )) {
+        for my $locale (keys %$charts) {
+            $charts->{$locale}->{$type} =
+                [ map { +{ code => $_ } } @{$charts->{$locale}->{$type}} ];
+        }
+    }
     template 'create-company', {
         'coa_countries' => [ sort { $a->{name} cmp $b->{name} }
-                             values %{$dbconfig->charts_of_accounts} ],
-        'coa_data' => $dbconfig->charts_of_accounts,
+                             values %$charts ],
+        'coa_data' => $charts,
         'templates' => $dbconfig->templates,
         'username' => '',
         'errormessage' => $errormessage,
@@ -303,7 +269,7 @@ post '/create-company' => require_login sub {
 
     my $app = LedgerSMB::ApplicationConnection->new(
         database => $database);
-    _load_templates($app, param('template_dir'));
+    $app->load_templates(param('template_dir'));
     _create_user($app, param('country_id'), param('employeenumber'),
                  param('first_name'), param('last_name'), param('dob'),
                  param('ssn'),
