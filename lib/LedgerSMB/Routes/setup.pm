@@ -5,8 +5,8 @@ use Dancer2 appname => 'LedgerSMB/Setup';
 use Dancer2::Plugin::Auth::Extensible;
 use Dancer2::Plugin::SessionDatabase;
 
-use File::Find::Rule;
 use File::Spec;
+use HTML::Escape;
 use Locale::Country;
 use Try::Tiny;
 use URI::Escape qw(uri_escape_utf8);
@@ -14,6 +14,7 @@ use URI::Escape qw(uri_escape_utf8);
 use LedgerSMB;
 use LedgerSMB::ApplicationConnection;
 use LedgerSMB::Database;
+use LedgerSMB::Database::Config;
 use LedgerSMB::Entity::Person::Employee;
 use LedgerSMB::Entity::User;
 use LedgerSMB::Sysconfig;
@@ -30,6 +31,12 @@ hook before_template_render => sub {
     my ($tokens) = @_;
 
     $tokens->{text} = sub { return shift };
+
+    # Attribute values need HTML encoding
+    # Because TT provides HTML encoding only as a filter, only entire
+    # blocks of output can be encoded. As a work-around, we provide
+    # a function 'html()' which performs the same function on partial data
+    $tokens->{html} = sub { return escape_html shift };
     $tokens->{ledgersmb_version} = $LedgerSMB::VERSION;
     $tokens->{username} = logged_in_user ? logged_in_user->{username} : '';
 };
@@ -74,36 +81,6 @@ sub _list_databases {
     return $databases;
 }
 
-sub _list_directory {
-    my $dir = shift;
-
-    return [] if ! -d $dir;
-
-    opendir(COA, $dir);
-    my @files =
-        map +{ code => $_ },
-        sort(grep !/^(\.|[Ss]ample.*)/,
-             readdir(COA));
-    closedir(COA);
-
-    return \@files;
-}
-
-sub _list_templates {
-    my $templates = [];
-    opendir ( DIR, $LedgerSMB::Sysconfig::templates)
-        or die "Couldn't open template directory: $!";
-
-    while( my $name = readdir(DIR)){
-        next if ($name =~ /^\./);
-        if (-d (LedgerSMB::Sysconfig::templates() . "/$name") ) {
-            push @$templates, $name;
-        }
-    }
-    closedir(DIR);
-    return $templates;
-}
-
 sub _list_users {
     return [] unless param('database');
 
@@ -120,42 +97,15 @@ sub _list_users {
     return $users;
 }
 
-sub _coa_countries {
-    my $countries = _list_directory('sql/coa');
-
-    for my $country (@$countries) {
-        $country->{name} = code2country($country->{code}, 'alpha-2');
-        for my $dir (qw(chart gifi sic)) {
-            $country->{$dir} =
-                _list_directory("sql/coa/$country->{code}/$dir");
-        }
-    }
-
-    return [ sort { $a->{name} cmp $b->{name} } @$countries ];
-}
-
-sub _coa_data {
-    my $coa_countries = _coa_countries();
-    return {
-        map { $_->{code} => $_ }
-        @$coa_countries
-    };
-}
-
-sub _template_sets {
-    my $templates = _list_directory('templates');
-
-    return $templates;
-}
-
 sub _load_templates {
     my $app = shift;
     my $template_dir = shift;
+    my $templates = LedgerSMB::Database::Config->new->templates;
     my $basedir = LedgerSMB::Sysconfig::templates();
 
-    for my $pathname (
-        grep { $_ =~ m|^\Q$basedir/$template_dir/\E| }
-        File::Find::Rule->new->in($basedir)) {
+    die "Invalid template set ($template_dir) specified"
+        if not exists $templates->{$template_dir};
+    for my $pathname (@{$templates->{$template_dir}}) {
 
         open my $fh, '<', $pathname
             or die "Failed to open tepmlate file $pathname : $!";
@@ -257,7 +207,8 @@ sub _get_admin_roles {
 get '/' => require_login sub {
     my $databases = _list_databases;
     my $users = _list_users;
-    my $templates = _list_templates;
+    my $templates =
+        [ sort keys %{ LedgerSMB::Database::Config->new->templates() } ];
 
     template 'setup_welcome', {
         database => param('database'),
@@ -271,11 +222,13 @@ get '/' => require_login sub {
 
 sub _template_create_company {
     my $errormessage = shift;
+    my $dbconfig = LedgerSMB::Database::Config->new;
 
     template 'create-company', {
-        'coa_countries' => _coa_countries(),
-        'coa_data' => _coa_data(),
-        'templates' => , _template_sets(),
+        'coa_countries' => [ sort { $a->{name} cmp $b->{name} }
+                             values %{$dbconfig->charts_of_accounts} ],
+        'coa_data' => $dbconfig->charts_of_accounts,
+        'templates' => $dbconfig->templates,
         'username' => '',
         'errormessage' => $errormessage,
         'salutations' => [
@@ -322,7 +275,10 @@ post '/create-company' => require_login sub {
     if ($info->{status} ne 'does not exist') {
         return _template_create_company("Database '$dbname' already exists");
     }
-    my $rc = eval { $database->create_and_load; };
+    my $rc = eval {
+        # Creates base schema, applies changes and loads modules
+        $database->create_and_load;
+    };
     if (! $rc) {
         ###TODO: include the failure logs in the result page!
         return _template_create_company(
@@ -359,7 +315,6 @@ post '/create-company' => require_login sub {
                             ? [ 'users_manage' ] : _get_admin_roles($app));
     }
     $app->dbh->commit;
-    ###TODO: rebuild_modules
 
     redirect uri_for('./') . '?completed=create-company&status=success&database='
         . uri_escape_utf8(param('database'));
